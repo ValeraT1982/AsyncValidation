@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.Practices.Unity;
+using AsyncValidation.ProgramDispatcher;
+using AsyncValidation.Tasks;
 
 namespace AsyncValidation.Demo
 {
@@ -50,7 +51,7 @@ namespace AsyncValidation.Demo
 
         public List<int> AvailableNumbers => new List<int>(new[] { 1, 2, 3, 5, 7, 11 });
 
-        public DemoViewModel(IUnityContainer unityContainer) : base(unityContainer)
+        public DemoViewModel(ITaskFactory taskFactory, IProgramDispatcher programDispatcher) : base(taskFactory, programDispatcher)
         {
             RegisterValidator(() => Name, ValidateName);
             RegisterValidator(() => Description, ValidateDescription);

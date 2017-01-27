@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using AsyncValidation.ProgramDispatcher;
 using AsyncValidation.Tasks;
-using Microsoft.Practices.Unity;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using NUnit.Framework;
@@ -35,8 +34,10 @@ namespace AsyncValidation.Tests
 
             public new IProgramDispatcher Dispatcher => base.Dispatcher;
 
-            public ValidatableViewModelStub(IUnityContainer unityContainer)
-                : base(unityContainer)
+            public new ITaskFactory TaskFactory => base.TaskFactory;
+
+            public ValidatableViewModelStub(ITaskFactory taskFactory, IProgramDispatcher programDispatcher)
+                : base(taskFactory, programDispatcher)
             {
 
             }
@@ -52,7 +53,6 @@ namespace AsyncValidation.Tests
         private readonly string _prop1Error1 = "Property 1 Error 1";
         private readonly string _prop2Error1 = "Property 2 Error 1";
         private readonly string _prop2Error2 = "Property 2 Error 2";
-        private IUnityContainer _unityContainerMock;
         private ITaskFactory _taskFactoryMock;
         private IProgramDispatcher _dispatcherMock;
         private Dispatcher _dispatcher;
@@ -64,21 +64,16 @@ namespace AsyncValidation.Tests
             SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
             _dispatcherMock = Substitute.For<IProgramDispatcher>();
             _dispatcherMock.When(d => d.InvokeOnUI(Arg.Any<Action>())).Do(info => _dispatcher.Invoke(info.Arg<Action>(), DispatcherPriority.Normal));
-
-            _unityContainerMock = Substitute.For<IUnityContainer>();
             _taskFactoryMock = Substitute.For<ITaskFactory>();
-
-            _unityContainerMock.Resolve<ITaskFactory>().Returns(_taskFactoryMock);
-            _unityContainerMock.Resolve<IProgramDispatcher>().Returns(_dispatcherMock);
         }
 
         [Test]
         public void ConstructorTest()
         {
-            var viewModel = new ValidatableViewModelStub(_unityContainerMock);
+            var viewModel = new ValidatableViewModelStub(_taskFactoryMock, _dispatcherMock);
 
             Assert.AreEqual(_dispatcherMock, viewModel.Dispatcher);
-            _unityContainerMock.Received().Resolve<IProgramDispatcher>();
+            Assert.AreEqual(_taskFactoryMock, viewModel.TaskFactory);
         }
 
         [Test]
@@ -265,7 +260,7 @@ namespace AsyncValidation.Tests
 
         private ValidatableViewModelStub CreateTestViewModel()
         {
-            var viewModel = new ValidatableViewModelStub(_unityContainerMock);
+            var viewModel = new ValidatableViewModelStub(_taskFactoryMock, _dispatcherMock);
             _taskFactoryMock.StartNew(Arg.Any<Action>())
                 .Returns(new Task(() => { }))
                 .AndDoes(info => info.Arg<Action>().Invoke());

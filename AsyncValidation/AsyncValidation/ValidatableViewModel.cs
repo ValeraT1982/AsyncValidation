@@ -7,7 +7,6 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using AsyncValidation.ProgramDispatcher;
 using AsyncValidation.Tasks;
-using Microsoft.Practices.Unity;
 
 namespace AsyncValidation
 {
@@ -27,11 +26,9 @@ namespace AsyncValidation
             protected set { Set(ref _isValid, value); }
         }
 
-        protected IUnityContainer UnityContainer { get; }
+        protected ITaskFactory TaskFactory { get; }
 
-        protected ITaskFactory TaskFactory => UnityContainer.Resolve<ITaskFactory>();
-
-        protected IProgramDispatcher Dispatcher => UnityContainer.Resolve<IProgramDispatcher>();
+        protected IProgramDispatcher Dispatcher { get; }
 
         protected readonly object Lock = new object();
 
@@ -41,10 +38,10 @@ namespace AsyncValidation
 
         private readonly Dictionary<string, Func<List<string>>> _validators = new Dictionary<string, Func<List<string>>>();
 
-
-        protected ValidatableViewModel(IUnityContainer unityContainer)
+        protected ValidatableViewModel(ITaskFactory taskFactory, IProgramDispatcher programDispatcher)
         {
-            UnityContainer = unityContainer;
+            TaskFactory = taskFactory;
+            Dispatcher = programDispatcher;
             PropertyChanged += (sender, args) => Validate(args.PropertyName);
         }
 

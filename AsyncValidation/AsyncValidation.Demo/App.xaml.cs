@@ -1,7 +1,5 @@
 ﻿using System.Windows;
-using AsyncValidation.ProgramDispatcher;
 using AsyncValidation.Tasks;
-using Microsoft.Practices.Unity;
 
 namespace AsyncValidation.Demo
 {
@@ -12,14 +10,9 @@ namespace AsyncValidation.Demo
     {
         private void App_OnStartup(object sender, StartupEventArgs e)
         {
-            var container = new UnityContainer();
-            container.RegisterInstance<IUnityContainer>(container);
-            container.RegisterInstance<IProgramDispatcher>(new ProgramDispatcher.ProgramDispatcher());
-            container.RegisterInstance<ITaskFactory>(new TaskFactory());
-
             var mainWindow = new MainWindow();
             mainWindow.Show();
-            mainWindow.DataContext = container.Resolve<DemoViewModel>();
+            mainWindow.DataContext = new DemoViewModel(new TaskFactory(), new ProgramDispatcher.ProgramDispatcher());
         }
     }
 }

@@ -51,6 +51,8 @@
                    Grid.ColumnSpan="3">
             <Label Content="Validating"
                    Visibility="{Binding IsValidating, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <Label Content="Valid"
+                   Visibility="{Binding IsValid, Converter={StaticResource BooleanToVisibilityConverter}}" />
         </StatusBar>
     </Grid>
 </Window>
