@@ -3,6 +3,9 @@ using System.Windows.Threading;
 
 namespace AsyncValidation.ProgramDispatcher
 {
+    /// <summary>
+    /// Invokes action in UI thread
+    /// </summary>
     public class ProgramDispatcher : IProgramDispatcher
     {
         private static Dispatcher _uiDispatcher;

@@ -118,7 +118,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AsyncValidation\AsyncValidation\AsyncValidation.csproj">
+    <ProjectReference Include="..\AsyncValidation\AsyncValidation.csproj">
       <Project>{13C23B3D-399D-464D-9C68-23514219E6DD}</Project>
       <Name>AsyncValidation</Name>
     </ProjectReference>

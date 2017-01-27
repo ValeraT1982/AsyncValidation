@@ -63,8 +63,7 @@
     <Compile Include="PropertyHelper.cs" />
     <Compile Include="Tasks\ITaskFactory.cs" />
     <Compile Include="Tasks\TaskFactory.cs" />
-    <Compile Include="ValidationChangedMessage.cs" />
-    <Compile Include="ViewModel.cs" />
+    <Compile Include="ValidatableViewModel.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

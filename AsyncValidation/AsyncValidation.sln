@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncValidation.Tests", "AsyncValidation.Tests\AsyncValidation.Tests.csproj", "{270D9BF7-7131-4B34-910D-9FA032E85D0E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncValidation.Demo", "..\AsyncValidation.Demo\AsyncValidation.Demo.csproj", "{F82EDB46-6D87-460F-BA38-EBDF01FBF8F4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsyncValidation.Demo", "AsyncValidation.Demo\AsyncValidation.Demo.csproj", "{F82EDB46-6D87-460F-BA38-EBDF01FBF8F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

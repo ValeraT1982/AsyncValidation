@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using AsyncValidation.ProgramDispatcher;
+using AsyncValidation.Tasks;
 using Microsoft.Practices.Unity;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -12,9 +15,9 @@ using NUnit.Framework;
 namespace AsyncValidation.Tests
 {
     [TestFixture]
-    public class ViewModelTests : TestsBase
+    public class ValidatableViewModelTests
     {
-        private class ViewModelStub : ViewModel
+        private class ValidatableViewModelStub : ValidatableViewModel
         {
             private string _propertyToValidate1;
             public string PropertyToValidate1
@@ -32,7 +35,7 @@ namespace AsyncValidation.Tests
 
             public new IProgramDispatcher Dispatcher => base.Dispatcher;
 
-            public ViewModelStub(IUnityContainer unityContainer)
+            public ValidatableViewModelStub(IUnityContainer unityContainer)
                 : base(unityContainer)
             {
 
@@ -49,14 +52,33 @@ namespace AsyncValidation.Tests
         private readonly string _prop1Error1 = "Property 1 Error 1";
         private readonly string _prop2Error1 = "Property 2 Error 1";
         private readonly string _prop2Error2 = "Property 2 Error 2";
+        private IUnityContainer _unityContainerMock;
+        private ITaskFactory _taskFactoryMock;
+        private IProgramDispatcher _dispatcherMock;
+        private Dispatcher _dispatcher;
+
+        [SetUp]
+        public virtual void SetUp()
+        {
+            _dispatcher = Dispatcher.CurrentDispatcher;
+            SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+            _dispatcherMock = Substitute.For<IProgramDispatcher>();
+            _dispatcherMock.When(d => d.InvokeOnUI(Arg.Any<Action>())).Do(info => _dispatcher.Invoke(info.Arg<Action>(), DispatcherPriority.Normal));
+
+            _unityContainerMock = Substitute.For<IUnityContainer>();
+            _taskFactoryMock = Substitute.For<ITaskFactory>();
+
+            _unityContainerMock.Resolve<ITaskFactory>().Returns(_taskFactoryMock);
+            _unityContainerMock.Resolve<IProgramDispatcher>().Returns(_dispatcherMock);
+        }
 
         [Test]
         public void ConstructorTest()
         {
-            var viewModel = new ViewModelStub(UnityContainerMock);
+            var viewModel = new ValidatableViewModelStub(_unityContainerMock);
 
-            Assert.AreEqual(DispatcherMock, viewModel.Dispatcher);
-            UnityContainerMock.Received().Resolve<IProgramDispatcher>();
+            Assert.AreEqual(_dispatcherMock, viewModel.Dispatcher);
+            _unityContainerMock.Received().Resolve<IProgramDispatcher>();
         }
 
         [Test]
@@ -241,17 +263,17 @@ namespace AsyncValidation.Tests
             Assert.That(() => viewModel.Validate(propertyName), Throws.TypeOf<ArgumentException>());
         }
 
-        private ViewModelStub CreateTestViewModel()
+        private ValidatableViewModelStub CreateTestViewModel()
         {
-            var viewModel = new ViewModelStub(UnityContainerMock);
-            TaskFactoryMock.StartNew(Arg.Any<Action>())
+            var viewModel = new ValidatableViewModelStub(_unityContainerMock);
+            _taskFactoryMock.StartNew(Arg.Any<Action>())
                 .Returns(new Task(() => { }))
                 .AndDoes(info => info.Arg<Action>().Invoke());
 
             return viewModel;
         }
 
-        private ViewModelStub CreateTestViewModel(List<string> property1Errors, List<string> property2Errors)
+        private ValidatableViewModelStub CreateTestViewModel(List<string> property1Errors, List<string> property2Errors)
         {
             var viewModel = CreateTestViewModel();
             viewModel.RegisterValidator(() => viewModel.PropertyToValidate1, () => property1Errors);

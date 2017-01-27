@@ -5,9 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:demo="clr-namespace:AsyncValidation.Demo"
         mc:Ignorable="d"
+        SizeToContent="WidthAndHeight"
         Title="Async Validation Demo"
-        Height="350"
-        Width="525"
         d:DataContext="{d:DesignInstance IsDesignTimeCreatable=False, d:Type=demo:DemoViewModelViewModel}">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />

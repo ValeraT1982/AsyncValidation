@@ -11,7 +11,7 @@ using Microsoft.Practices.Unity;
 
 namespace AsyncValidation
 {
-    public abstract class ViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
+    public abstract class ValidatableViewModel : INotifyDataErrorInfo, INotifyPropertyChanged
     {
         private bool _isValidating;
         public bool IsValidating
@@ -42,7 +42,7 @@ namespace AsyncValidation
         private readonly Dictionary<string, Func<List<string>>> _validators = new Dictionary<string, Func<List<string>>>();
 
 
-        protected ViewModel(IUnityContainer unityContainer)
+        protected ValidatableViewModel(IUnityContainer unityContainer)
         {
             UnityContainer = unityContainer;
             PropertyChanged += (sender, args) => Validate(args.PropertyName);
@@ -67,7 +67,7 @@ namespace AsyncValidation
         public event PropertyChangedEventHandler PropertyChanged;
         #endregion
 
-        public virtual List<string> GetErrors()
+        public List<string> GetErrors()
         {
             return _validationErrors.SelectMany(p => p.Value).Distinct().ToList();
         }

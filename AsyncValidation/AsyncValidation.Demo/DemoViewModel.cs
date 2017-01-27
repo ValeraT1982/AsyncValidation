@@ -4,7 +4,7 @@ using Microsoft.Practices.Unity;
 
 namespace AsyncValidation.Demo
 {
-    class DemoViewModel : ViewModel
+    class DemoViewModel : ValidatableViewModel
     {
         private string _name;
         public string Name
@@ -55,6 +55,7 @@ namespace AsyncValidation.Demo
             RegisterValidator(() => Name, ValidateName);
             RegisterValidator(() => Description, ValidateDescription);
             RegisterValidator(() => Number, ValidateNumber);
+            ValidateAll();
         }
 
         private List<string> ValidateName()

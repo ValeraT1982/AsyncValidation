@@ -3,10 +3,11 @@ using System.Threading.Tasks;
 
 namespace AsyncValidation.Tasks
 {
+    /// <summary>
+    /// Starts new task
+    /// </summary>
     public interface ITaskFactory
     {
         Task StartNew(Action action);
-
-        Task<T> StartNew<T>(Func<T> func);
     }
 }
