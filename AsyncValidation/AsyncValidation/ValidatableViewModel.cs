@@ -5,8 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using AsyncValidation.ProgramDispatcher;
-using AsyncValidation.Tasks;
+using System.Threading.Tasks;
 
 namespace AsyncValidation
 {
@@ -26,22 +25,12 @@ namespace AsyncValidation
             protected set { Set(ref _isValid, value); }
         }
 
-        protected ITaskFactory TaskFactory { get; }
-
-        protected IProgramDispatcher Dispatcher { get; }
-
-        protected readonly object Lock = new object();
-
         private readonly Dictionary<string, List<string>> _validationErrors = new Dictionary<string, List<string>>();
+        private readonly Dictionary<string, Guid> _lastValidationProcesses = new Dictionary<string, Guid>();
+        private readonly Dictionary<string, Func<Task<List<string>>>> _validators = new Dictionary<string, Func<Task<List<string>>>>();
 
-        private readonly Dictionary<Guid, string> _validationProcesses = new Dictionary<Guid, string>();
-
-        private readonly Dictionary<string, Func<List<string>>> _validators = new Dictionary<string, Func<List<string>>>();
-
-        protected ValidatableViewModel(ITaskFactory taskFactory, IProgramDispatcher programDispatcher)
+        protected ValidatableViewModel()
         {
-            TaskFactory = taskFactory;
-            Dispatcher = programDispatcher;
             PropertyChanged += (sender, args) => Validate(args.PropertyName);
         }
 
@@ -66,7 +55,7 @@ namespace AsyncValidation
 
         public List<string> GetErrors()
         {
-            return _validationErrors.SelectMany(p => p.Value).Distinct().ToList();
+            return _validationErrors.SelectMany(p => p.Value).ToList();
         }
 
         protected void Set<T>(ref T storage, T value, [CallerMemberName] string property = null)
@@ -77,7 +66,6 @@ namespace AsyncValidation
             }
 
             storage = value;
-
             RaisePropertyChanged(property);
         }
 
@@ -86,109 +74,77 @@ namespace AsyncValidation
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
         }
 
-        protected void RegisterValidator<TProperty>(Expression<Func<TProperty>> propertyExpression, Func<List<string>> validatorFunc)
+        protected void RegisterValidator<TProperty>(Expression<Func<TProperty>> propertyExpression, Func<Task<List<string>>> validatorFunc)
         {
             RegisterValidator(PropertyHelper.GetPropertyName(propertyExpression), validatorFunc);
         }
 
-        protected void RegisterValidator(string propertyName, Func<List<string>> validatorFunc)
+        protected void RegisterValidator(string propertyName, Func<Task<List<string>>> validatorFunc)
         {
-            lock (Lock)
+            if (_validators.ContainsKey(propertyName))
             {
-                if (_validators.ContainsKey(propertyName))
-                {
-                    _validators.Remove(propertyName);
-                }
-
-                _validators[propertyName] = validatorFunc;
+                _validators.Remove(propertyName);
             }
+
+            _validators[propertyName] = validatorFunc;
         }
 
-        protected void Validate(string property)
+        protected async Task Validate(string property)
         {
             if (string.IsNullOrWhiteSpace(property))
             {
                 throw new ArgumentException();
             }
 
-            Func<List<string>> validator;
-
+            Func<Task<List<string>>> validator;
             if (!_validators.TryGetValue(property, out validator))
             {
                 return;
             }
 
-            TaskFactory.StartNew(() =>
+            var validationProcessKey = Guid.NewGuid();
+            _lastValidationProcesses[property] = validationProcessKey;
+            IsValidating = true;
+            try
             {
-                var validationProcessKey = Guid.NewGuid();
-
-                lock (Lock)
+                var errors = await validator();
+                if (_lastValidationProcesses.ContainsKey(property) && 
+                    _lastValidationProcesses[property] == validationProcessKey)
                 {
-                    _validationProcesses.Add(validationProcessKey, property);
-                }
-
-                Dispatcher.InvokeOnUI(() => IsValidating = true);
-
-                try
-                {
-                    var errors = validator();
-
-                    lock (Lock)
+                    if (errors != null && errors.Any())
                     {
-                        if (errors != null && errors.Any())
-                        {
-                            _validationErrors[property] = errors;
-                        }
-                        else if (_validationErrors.ContainsKey(property))
-                        {
-                            _validationErrors.Remove(property);
-                        }
+                        _validationErrors[property] = errors;
+                    }
+                    else if (_validationErrors.ContainsKey(property))
+                    {
+                        _validationErrors.Remove(property);
                     }
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                _validationErrors[property] = new List<string>(new[] { ex.Message });
+            }
+            finally
+            {
+                if (_lastValidationProcesses.ContainsKey(property) && 
+                    _lastValidationProcesses[property] == validationProcessKey)
                 {
-                    lock (Lock)
-                    {
-                        _validationErrors[property] = new List<string>(new[]
-                        {
-                            ex.Message
-                        });
-                    }
+                    _lastValidationProcesses.Remove(property);
                 }
-                finally
-                {
-                    bool localIsValidating;
-                    bool localIsValid;
 
-                    lock (Lock)
-                    {
-                        _validationProcesses.Remove(validationProcessKey);
-                        localIsValidating = _validationProcesses.Any();
-                        localIsValid = !_validationProcesses.Any() && !_validationErrors.Any();
-                    }
-
-                    Dispatcher.InvokeOnUI(() =>
-                    {
-                        IsValidating = localIsValidating;
-                        IsValid = localIsValid;
-                        OnErrorsChanged(property);
-                    });
-                }
-            });
+                IsValidating = _lastValidationProcesses.Any();
+                IsValid = !_lastValidationProcesses.Any() && !_validationErrors.Any();
+                OnErrorsChanged(property);
+            }
         }
 
-        protected void ValidateAll()
+        protected async Task ValidateAll()
         {
-            Dictionary<string, Func<List<string>>> validators;
-
-            lock (Lock)
-            {
-                validators = _validators;
-            }
-
+            var validators = _validators;
             foreach (var propertyName in validators.Keys)
             {
-                Validate(propertyName);
+                await Validate(propertyName);
             }
         }
 

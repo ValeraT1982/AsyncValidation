@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using AsyncValidation.ProgramDispatcher;
-using AsyncValidation.Tasks;
 
 namespace AsyncValidation.Demo
 {
@@ -51,7 +49,7 @@ namespace AsyncValidation.Demo
 
         public List<int> AvailableNumbers => new List<int>(new[] { 1, 2, 3, 5, 7, 11 });
 
-        public DemoViewModel(ITaskFactory taskFactory, IProgramDispatcher programDispatcher) : base(taskFactory, programDispatcher)
+        public DemoViewModel()
         {
             RegisterValidator(() => Name, ValidateName);
             RegisterValidator(() => Description, ValidateDescription);
@@ -59,9 +57,9 @@ namespace AsyncValidation.Demo
             ValidateAll();
         }
 
-        private List<string> ValidateName()
+        private async Task<List<string>> ValidateName()
         {
-            Task.Delay(3000).Wait();
+            await Task.Delay(3000);
 
             if (string.IsNullOrWhiteSpace(Name))
             {
@@ -76,9 +74,9 @@ namespace AsyncValidation.Demo
             return new List<string>();
         }
 
-        private List<string> ValidateDescription()
+        private async Task<List<string>> ValidateDescription()
         {
-            Task.Delay(4000).Wait();
+            await Task.Delay(4000);
 
             if (string.IsNullOrWhiteSpace(Description))
             {
@@ -93,9 +91,9 @@ namespace AsyncValidation.Demo
             return new List<string>();
         }
 
-        private List<string> ValidateNumber()
+        private async Task<List<string>> ValidateNumber()
         {
-            Task.Delay(2000).Wait();
+            await Task.Delay(2000);
 
             if (Number > 5)
             {

@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using AsyncValidation.Tasks;
 
 namespace AsyncValidation.Demo
 {
@@ -12,7 +11,7 @@ namespace AsyncValidation.Demo
         {
             var mainWindow = new MainWindow();
             mainWindow.Show();
-            mainWindow.DataContext = new DemoViewModel(new TaskFactory(), new ProgramDispatcher.ProgramDispatcher());
+            mainWindow.DataContext = new DemoViewModel();
         }
     }
 }
