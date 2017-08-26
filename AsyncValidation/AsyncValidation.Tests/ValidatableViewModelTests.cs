@@ -82,13 +82,13 @@ namespace AsyncValidation.Tests
                 new List<string> { _prop1Error1 },
                 new List<string> { _prop2Error1 });
 
-            viewModel.PropertyToValidate1 = "Test";
-            viewModel.PropertyToValidate2 = "Test";
+            viewModel.PropertyToValidate1 = _prop1Error1;
+            viewModel.PropertyToValidate2 = _prop2Error1;
             var errors = viewModel.GetErrors();
 
             var prop1Errors = viewModel.GetErrors("PropertyToValidate1").Cast<string>().ToList();
             var prop2Errors = viewModel.GetErrors("PropertyToValidate2").Cast<string>().ToList();
-            Assert.AreEqual(1, errors.Count);
+            Assert.AreEqual(2, errors.Count);
             Assert.AreEqual(1, prop1Errors.Count);
             Assert.AreEqual(1, prop2Errors.Count);
         }
